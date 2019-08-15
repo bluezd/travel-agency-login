@@ -26,20 +26,32 @@ deploy-to-oke:
   steps:
     - bash-template
     
-    - script:
-        name: "Visualise Kubernetes config"
-        code: cat kubernetes-deployment.yml
-
     - kubectl:
         name: delete deplyoment
         server: $KUBERNETES_MASTER
         token: $KUBERNETES_TOKEN
         insecure-skip-tls-verify: true
-        command: delete -f $WERCKER_ROOT/kubernetes-deployment.yml --namespace=$APP_LOGIN_NAMESPACE --ignore-not-found=true
+        command: delete -f $WERCKER_ROOT/kubernetes-deployment.yml --namespace=$APP_NAMESPACE --ignore-not-found=true
 
     - kubectl:
         name: create deplyoment
         server: $KUBERNETES_MASTER
         token: $KUBERNETES_TOKEN
         insecure-skip-tls-verify: true
-        command: create -f $WERCKER_ROOT/kubernetes-deployment.yml --namespace=$APP_LOGIN_NAMESPACE
+        command: create -f $WERCKER_ROOT/kubernetes-deployment.yml --namespace=$APP_NAMESPACE
+
+functional-test:
+  box:
+    id: node:8.10
+  steps:
+    - script:
+        name: Run Test
+        code: |
+            timeout 10 npm start
+            exit_status=$?
+            if [ $exit_status -eq 124 ]; then
+              echo "### test passed ###"
+            else
+              echo "### test failed ###"
+              exit -1
+            fi

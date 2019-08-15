@@ -20,7 +20,7 @@ spec:
       - image: $OKE_REPOSITORY/$WERCKER_APPLICATION_NAME:$WERCKER_GIT_BRANCH-$WERCKER_GIT_COMMIT
         #imagePullPolicy: IfNotPresent 
         imagePullPolicy: Always 
-        name: ta-flight
+        name: ta-login
         ports:
         - containerPort: 8999
           protocol: TCP
@@ -31,7 +31,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ta-login
+  name: ta-login-svc
 spec:
   selector:
     run: ta-login
@@ -39,3 +39,20 @@ spec:
     - port: 9001
       targetPort: 8999
   type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ta-login-ing
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    #ingress.kubernetes.io/add-base-url: 'true'
+    #ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /login
+        backend:
+          serviceName: ta-login-svc
+          servicePort: 9001
