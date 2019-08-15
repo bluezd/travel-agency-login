@@ -2,44 +2,28 @@ box:
   id: node:8.10
 build:
   steps:
-    - script:
-        name: npm install
-        code: |
-            npm install
+    - internal/docker-build:
+        dockerfile: Dockerfile
+        image-name: travel-agency-login-graal
 
-push-to-releases:
-  steps:
     - internal/docker-push:
+        image-name: travel-agency-login-graal
         tag: $WERCKER_GIT_BRANCH-$WERCKER_GIT_COMMIT
-        ports: "8999"
-        cmd: npm start
-        working-dir: /pipeline/source/
         username: $OKE_USERNAME
         password: $OKE_PASSWORD
-        repository: $OKE_REPOSITORY/$WERCKER_APPLICATION_NAME
+        repository: $OKE_REPOSITORY_GRAAL
         registry: $OKE_REGISTRY
 
-deploy-to-oke:
+deploy-to-oke-graal:
   box:
         id: alpine
         cmd: /bin/sh
   steps:
     - bash-template
-    
-    - script:
-        name: "Visualise Kubernetes config"
-        code: cat kubernetes-deployment.yml
 
     - kubectl:
-        name: delete deplyoment
+        name: apply deplyoment
         server: $KUBERNETES_MASTER
         token: $KUBERNETES_TOKEN
         insecure-skip-tls-verify: true
-        command: delete -f $WERCKER_ROOT/kubernetes-deployment.yml --namespace=$APP_LOGIN_NAMESPACE --ignore-not-found=true
-
-    - kubectl:
-        name: create deplyoment
-        server: $KUBERNETES_MASTER
-        token: $KUBERNETES_TOKEN
-        insecure-skip-tls-verify: true
-        command: create -f $WERCKER_ROOT/kubernetes-deployment.yml --namespace=$APP_LOGIN_NAMESPACE
+        command: apply -f $WERCKER_ROOT/kubernetes-deployment.yml --namespace=$APP_NAMESPACE

@@ -1,9 +1,9 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: ta-login
+  name: ta-login-graal
   labels:
-    run: ta-login
+    run: ta-login-graal
 spec:
   replicas: 1
   strategy:
@@ -14,13 +14,13 @@ spec:
   template:
     metadata:
       labels:
-        run: ta-login
+        run: ta-login-graal
     spec:
       containers:
-      - image: $OKE_REPOSITORY/$WERCKER_APPLICATION_NAME:$WERCKER_GIT_BRANCH-$WERCKER_GIT_COMMIT
+      - image: $OKE_REPOSITORY_GRAAL:$WERCKER_GIT_BRANCH-$WERCKER_GIT_COMMIT 
         #imagePullPolicy: IfNotPresent 
         imagePullPolicy: Always 
-        name: ta-flight
+        name: ta-login-graal
         ports:
         - containerPort: 8999
           protocol: TCP
@@ -31,11 +31,28 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ta-login
+  name: ta-login-graal-svc
 spec:
   selector:
-    run: ta-login
+    run: ta-login-graal
   ports:
-    - port: 9001
+    - port: 7001
       targetPort: 8999
   type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ta-login-graal-ing
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    #ingress.kubernetes.io/add-base-url: 'true'
+    ingress.kubernetes.io/rewrite-target: /login
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /login-graal
+        backend:
+          serviceName: ta-login-graal-svc
+          servicePort: 7001
